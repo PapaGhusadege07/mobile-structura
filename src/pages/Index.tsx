@@ -1,12 +1,46 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { BottomNav } from "@/components/BottomNav";
+import { HomeView } from "@/components/views/HomeView";
+import { ScanView } from "@/components/views/ScanView";
+import { ReportsView } from "@/components/views/ReportsView";
+import { SettingsView } from "@/components/views/SettingsView";
 
 const Index = () => {
+  const [activeTab, setActiveTab] = useState("home");
+
+  const handleStartScan = () => {
+    setActiveTab("scan");
+  };
+
+  const handleScanComplete = () => {
+    // Could navigate to reports or show results
+    setActiveTab("reports");
+  };
+
+  const renderView = () => {
+    switch (activeTab) {
+      case "home":
+        return <HomeView onStartScan={handleStartScan} />;
+      case "scan":
+        return (
+          <ScanView 
+            onComplete={handleScanComplete} 
+            onBack={() => setActiveTab("home")} 
+          />
+        );
+      case "reports":
+        return <ReportsView />;
+      case "settings":
+        return <SettingsView />;
+      default:
+        return <HomeView onStartScan={handleStartScan} />;
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      {renderView()}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 };
