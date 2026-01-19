@@ -136,8 +136,8 @@ function FootingMesh({ input, result }: { input: FootingInput; result: FootingDe
 
       {/* Bottom reinforcement grid */}
       {[...Array(Math.floor(length / 0.15))].map((_, i) => (
-        <mesh key={`rebar-x-${i}`} position={[(i - Math.floor(length / 0.3)) * 0.15, 0.04, 0]}>
-          <cylinderGeometry args={[0.006, 0.006, width - 0.1, 8]} rotation={[Math.PI / 2, 0, 0]} />
+        <mesh key={`rebar-x-${i}`} position={[(i - Math.floor(length / 0.3)) * 0.15, 0.04, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.006, 0.006, width - 0.1, 8]} />
           <meshStandardMaterial color="#0ea5e9" />
         </mesh>
       ))}
