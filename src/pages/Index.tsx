@@ -4,6 +4,8 @@ import { HomeView } from "@/components/views/HomeView";
 import { ScanView } from "@/components/views/ScanView";
 import { ReportsView } from "@/components/views/ReportsView";
 import { SettingsView } from "@/components/views/SettingsView";
+import { DesignView } from "@/components/views/DesignView";
+import { DrainageView } from "@/components/views/DrainageView";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
@@ -30,6 +32,10 @@ const Index = () => {
         );
       case "reports":
         return <ReportsView />;
+      case "design":
+        return <DesignView />;
+      case "drainage":
+        return <DrainageView />;
       case "settings":
         return <SettingsView />;
       default:
