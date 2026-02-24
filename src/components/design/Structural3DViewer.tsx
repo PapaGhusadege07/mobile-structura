@@ -32,13 +32,37 @@ function BeamMesh({ input }: { input: BeamInput }) {
         </mesh>
       ))}
 
-      {/* Stirrups */}
-      {[...Array(Math.floor(length / 0.2))].map((_, i) => (
-        <mesh key={`stirrup-${i}`} position={[(i - Math.floor(length / 0.4)) * 0.2, depth / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <torusGeometry args={[Math.min(width, depth) / 2 - 0.02, 0.006, 4, 4]} />
-          <meshStandardMaterial color="#f59e0b" />
-        </mesh>
-      ))}
+      {/* Stirrups - rectangular, matching beam cross-section (width × depth) */}
+      {[...Array(Math.floor(length / 0.2))].map((_, i) => {
+        const x = (i - Math.floor(length / 0.4)) * 0.2;
+        const hw = (width - 0.04) / 2;   // half-width with cover
+        const hd = (depth - 0.04) / 2;   // half-depth with cover
+        const r = 0.006; // bar radius
+        return (
+          <group key={`stirrup-${i}`} position={[x, depth / 2, 0]}>
+            {/* Top bar */}
+            <mesh position={[0, hd, 0]}>
+              <boxGeometry args={[r * 2, r * 2, width - 0.04]} />
+              <meshStandardMaterial color="#f59e0b" />
+            </mesh>
+            {/* Bottom bar */}
+            <mesh position={[0, -hd, 0]}>
+              <boxGeometry args={[r * 2, r * 2, width - 0.04]} />
+              <meshStandardMaterial color="#f59e0b" />
+            </mesh>
+            {/* Left bar */}
+            <mesh position={[0, 0, -hw]}>
+              <boxGeometry args={[r * 2, depth - 0.04, r * 2]} />
+              <meshStandardMaterial color="#f59e0b" />
+            </mesh>
+            {/* Right bar */}
+            <mesh position={[0, 0, hw]}>
+              <boxGeometry args={[r * 2, depth - 0.04, r * 2]} />
+              <meshStandardMaterial color="#f59e0b" />
+            </mesh>
+          </group>
+        );
+      })}
 
       {/* Supports */}
       <mesh position={[-length / 2 + 0.1, -0.1, 0]}>
