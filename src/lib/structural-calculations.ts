@@ -504,8 +504,11 @@ export function estimateBeamCost(input: BeamInput, result: BeamDesignResult, rat
   const volume = (input.width / 1000) * (input.depth / 1000) * input.spanLength;
   const concreteCost = volume * rates.concrete[input.concreteGrade];
   
-  const steelWeight = ((result.reinforcement.tensionArea + result.reinforcement.compressionArea) * input.spanLength * 7850) / 1e9;
-  const stirrupWeight = steelWeight * 0.3; // approximate
+  // Steel weight: Area(mm²) × Length(m) × 0.00785 kg/mm²/m
+  const totalSteelArea_mm2 = result.reinforcement.tensionArea + result.reinforcement.compressionArea;
+  const steelLength_m = input.spanLength * 1.1; // 10% for laps/bends
+  const steelWeight = totalSteelArea_mm2 * steelLength_m * 0.00785;
+  const stirrupWeight = steelWeight * 0.25; // 25% additional for stirrups
   const totalSteelWeight = steelWeight + stirrupWeight;
   const steelCost = totalSteelWeight * rates.steel;
   

@@ -34,7 +34,7 @@ function BeamMesh({ input }: { input: BeamInput }) {
 
       {/* Stirrups */}
       {[...Array(Math.floor(length / 0.2))].map((_, i) => (
-        <mesh key={`stirrup-${i}`} position={[(i - Math.floor(length / 0.4)) * 0.2, depth / 2, 0]}>
+        <mesh key={`stirrup-${i}`} position={[(i - Math.floor(length / 0.4)) * 0.2, depth / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
           <torusGeometry args={[Math.min(width, depth) / 2 - 0.02, 0.006, 4, 4]} />
           <meshStandardMaterial color="#f59e0b" />
         </mesh>
