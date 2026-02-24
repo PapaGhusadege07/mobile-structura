@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,12 +22,72 @@ import {
 import { Ruler, Layers, Box, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function InputField({ 
+  label, 
+  name, 
+  value, 
+  onChange, 
+  unit, 
+  error 
+}: { 
+  label: string; 
+  name: string; 
+  value: number; 
+  onChange: (v: number) => void; 
+  unit: string;
+  error?: string;
+}) {
+  const [localValue, setLocalValue] = useState<string>(String(value));
+  const prevValue = useRef(value);
+  
+  if (prevValue.current !== value && String(value) !== localValue) {
+    setLocalValue(String(value));
+  }
+  prevValue.current = value;
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={name} className="text-sm font-medium">
+        {label}
+      </Label>
+      <div className="relative">
+        <Input
+          id={name}
+          type="text"
+          inputMode="decimal"
+          value={localValue}
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (/^-?\d*\.?\d*$/.test(raw) || raw === '') {
+              setLocalValue(raw);
+            }
+          }}
+          onBlur={() => {
+            const num = parseFloat(localValue) || 0;
+            setLocalValue(String(num));
+            onChange(num);
+          }}
+          className={cn("pr-12 font-mono", error && "border-destructive")}
+        />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+          {unit}
+        </span>
+      </div>
+      {error && (
+        <div className="flex items-center gap-1 text-destructive text-xs">
+          <AlertCircle className="w-3 h-3" />
+          {error}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface DesignInputFormProps {
   onBeamSubmit: (data: BeamInput) => void;
   onColumnSubmit: (data: ColumnInput) => void;
   onFootingSubmit: (data: FootingInput) => void;
 }
-
 export function DesignInputForm({ onBeamSubmit, onColumnSubmit, onFootingSubmit }: DesignInputFormProps) {
   const [activeTab, setActiveTab] = useState("beam");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -107,45 +167,7 @@ export function DesignInputForm({ onBeamSubmit, onColumnSubmit, onFootingSubmit 
     onFootingSubmit(result.data);
   };
 
-  const InputField = ({ 
-    label, 
-    name, 
-    value, 
-    onChange, 
-    unit, 
-    error 
-  }: { 
-    label: string; 
-    name: string; 
-    value: number; 
-    onChange: (v: number) => void; 
-    unit: string;
-    error?: string;
-  }) => (
-    <div className="space-y-2">
-      <Label htmlFor={name} className="text-sm font-medium">
-        {label}
-      </Label>
-      <div className="relative">
-        <Input
-          id={name}
-          type="number"
-          value={value}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-          className={cn("pr-12 font-mono", error && "border-destructive")}
-        />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-          {unit}
-        </span>
-      </div>
-      {error && (
-        <div className="flex items-center gap-1 text-destructive text-xs">
-          <AlertCircle className="w-3 h-3" />
-          {error}
-        </div>
-      )}
-    </div>
-  );
+  
 
   const GradeSelect = ({
     label,
