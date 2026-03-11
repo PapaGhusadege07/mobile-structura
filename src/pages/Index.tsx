@@ -11,6 +11,8 @@ import { AnalyticsView } from "@/components/views/AnalyticsView";
 import { CalculatorsView } from "@/components/views/CalculatorsView";
 import { CostEstimatorView } from "@/components/views/CostEstimatorView";
 import { SupplierView } from "@/components/views/SupplierView";
+import { RegionPricingView } from "@/components/views/RegionPricingView";
+import { AdminPricingView } from "@/components/views/AdminPricingView";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
@@ -31,6 +33,8 @@ const Index = () => {
       case "calculators": return <CalculatorsView />;
       case "estimator": return <CostEstimatorView />;
       case "suppliers": return <SupplierView />;
+      case "pricing": return <RegionPricingView />;
+      case "admin-pricing": return <AdminPricingView />;
       default: return <HomeView onStartScan={handleStartScan} />;
     }
   };
