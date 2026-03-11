@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, Scan, BarChart3, Settings, Ruler, Droplets, TrendingUp, LineChart, Calculator, IndianRupee, Store, Menu, X } from "lucide-react";
+import { Home, Scan, BarChart3, Settings, Ruler, Droplets, TrendingUp, LineChart, Calculator, IndianRupee, Store, Menu, X, MapPin, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -12,13 +12,15 @@ interface NavItem {
 const navItems: NavItem[] = [
   { icon: Home, label: "Home", id: "home", group: "main" },
   { icon: TrendingUp, label: "Prices", id: "market", group: "market" },
-  { icon: LineChart, label: "Analytics", id: "analytics", group: "market" },
+  { icon: MapPin, label: "Regions", id: "pricing", group: "market" },
   { icon: Calculator, label: "Calc", id: "calculators", group: "market" },
   { icon: IndianRupee, label: "Estimate", id: "estimator", group: "market" },
   { icon: Store, label: "Suppliers", id: "suppliers", group: "market" },
 ];
 
 const moreItems: NavItem[] = [
+  { icon: LineChart, label: "Analytics", id: "analytics" },
+  { icon: Settings2, label: "Admin Price", id: "admin-pricing" },
   { icon: Scan, label: "Scan", id: "scan" },
   { icon: BarChart3, label: "Reports", id: "reports" },
   { icon: Ruler, label: "Structure", id: "design" },
