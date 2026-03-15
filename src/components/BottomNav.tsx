@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
 ];
 
 const moreItems: NavItem[] = [
+  { icon: CalendarDays, label: "Schedule", id: "schedule" },
   { icon: Scan, label: "Scan", id: "scan" },
   { icon: BarChart3, label: "Reports", id: "reports" },
   { icon: Ruler, label: "Structure", id: "design" },

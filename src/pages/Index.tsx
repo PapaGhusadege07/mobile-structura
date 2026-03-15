@@ -32,6 +32,7 @@ const Index = () => {
       case "calculators": return <CalculatorsView />;
       case "estimator": return <CostEstimatorView />;
       case "suppliers": return <SupplierView />;
+      case "schedule": return <SchedulingView />;
       default: return <HomeView onStartScan={handleStartScan} />;
     }
   };
