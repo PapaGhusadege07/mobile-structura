@@ -11,6 +11,7 @@ import { AnalyticsView } from "@/components/views/AnalyticsView";
 import { CalculatorsView } from "@/components/views/CalculatorsView";
 import { CostEstimatorView } from "@/components/views/CostEstimatorView";
 import { SupplierView } from "@/components/views/SupplierView";
+import { SchedulingView } from "@/components/views/SchedulingView";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
