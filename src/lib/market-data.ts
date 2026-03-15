@@ -104,48 +104,7 @@ function mat(id: string, name: string, category: MaterialCategory, unit: string,
 
 export const materials: Material[] = [];
 
-export const suppliers: Supplier[] = [
-  {
-    id: "s1", companyName: "BuildMart India", contactPerson: "Rajesh Kumar", phone: "+91 98765 43210",
-    email: "info@buildmart.in", city: "Mumbai", deliveryArea: ["Mumbai", "Pune", "Nashik"],
-    materials: ["Cement", "Steel", "Sand", "Aggregates"], rating: 4.5, reviews: 234, verified: true,
-  },
-  {
-    id: "s2", companyName: "Nirmaan Supplies", contactPerson: "Suresh Patel", phone: "+91 87654 32109",
-    email: "sales@nirmaan.co", city: "Ahmedabad", deliveryArea: ["Ahmedabad", "Surat", "Vadodara"],
-    materials: ["Bricks", "Blocks", "Tiles", "Plywood"], rating: 4.2, reviews: 156, verified: true,
-  },
-  {
-    id: "s3", companyName: "SteelKing Traders", contactPerson: "Anand Sharma", phone: "+91 76543 21098",
-    email: "anand@steelking.in", city: "Delhi", deliveryArea: ["Delhi", "Noida", "Gurgaon"],
-    materials: ["Steel", "TMT Bars", "Binding Wire", "Mesh"], rating: 4.7, reviews: 312, verified: true,
-  },
-  {
-    id: "s4", companyName: "SouthBuild Corp", contactPerson: "Karthik R", phone: "+91 65432 10987",
-    email: "karthik@southbuild.in", city: "Chennai", deliveryArea: ["Chennai", "Coimbatore", "Madurai"],
-    materials: ["M Sand", "Cement", "RMC", "Blocks"], rating: 4.3, reviews: 189, verified: true,
-  },
-  {
-    id: "s5", companyName: "ElectroPro Solutions", contactPerson: "Vikram Singh", phone: "+91 54321 09876",
-    email: "vikram@electropro.in", city: "Bangalore", deliveryArea: ["Bangalore", "Mysore"],
-    materials: ["Wires", "Switches", "MCB", "LED Lights"], rating: 4.6, reviews: 98, verified: false,
-  },
-  {
-    id: "s6", companyName: "PipeLine Masters", contactPerson: "Faraz Khan", phone: "+91 43210 98765",
-    email: "faraz@pipeline.in", city: "Hyderabad", deliveryArea: ["Hyderabad", "Secunderabad"],
-    materials: ["PVC Pipes", "CPVC Pipes", "Fittings", "Valves"], rating: 4.1, reviews: 67, verified: true,
-  },
-  {
-    id: "s7", companyName: "WoodCraft Industries", contactPerson: "Mohan Das", phone: "+91 32109 87654",
-    email: "mohan@woodcraft.in", city: "Kolkata", deliveryArea: ["Kolkata", "Howrah", "Durgapur"],
-    materials: ["Plywood", "MDF", "Laminates", "Doors"], rating: 4.4, reviews: 145, verified: true,
-  },
-  {
-    id: "s8", companyName: "TileWorld India", contactPerson: "Priya Mehta", phone: "+91 21098 76543",
-    email: "priya@tileworld.in", city: "Pune", deliveryArea: ["Pune", "Mumbai", "Nashik"],
-    materials: ["Vitrified Tiles", "Ceramic Tiles", "Marble", "Granite"], rating: 4.8, reviews: 278, verified: true,
-  },
-];
+export const suppliers: Supplier[] = [];
 
 // Calculator utilities
 export interface ConcreteResult {

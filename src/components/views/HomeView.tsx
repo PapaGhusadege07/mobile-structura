@@ -44,9 +44,9 @@ export function HomeView({ onStartScan }: HomeViewProps) {
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
                 <div className="text-sm text-muted-foreground mb-1">Overall Status</div>
-                <StatusBadge status="healthy" label="All Systems Healthy" />
+                <StatusBadge status="healthy" label="No scans yet" />
               </div>
-              <HealthScore score={89} size="sm" />
+              <HealthScore score={0} size="sm" />
             </div>
           </CardContent>
         </Card>
@@ -58,13 +58,13 @@ export function HomeView({ onStartScan }: HomeViewProps) {
           {
             icon: Activity,
             label: "Vibration",
-            value: "Normal",
+            value: "—",
             color: "text-success",
           },
           {
             icon: Building2,
             label: "Structures",
-            value: "12",
+            value: "0",
             color: "text-accent",
           },
         ].map((item, index) => (

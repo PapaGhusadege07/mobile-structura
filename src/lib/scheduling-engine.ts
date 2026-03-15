@@ -193,32 +193,7 @@ export function getProjectDuration(tasks: ScheduleTask[]): number {
   return Math.ceil((latest - earliest) / (1000 * 60 * 60 * 24));
 }
 
-// Sample construction project template
+// Sample construction project template (empty — no demo data)
 export function getSampleProject(): ScheduleTask[] {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return [
-    { id: "t1", name: "Site Clearing & Leveling", startDate: new Date(today), duration: 5, dependencies: [], category: "site-preparation", progress: 0, resources: "Excavator, Laborers", notes: "" },
-    { id: "t2", name: "Soil Testing", startDate: new Date(today), duration: 3, dependencies: ["t1"], category: "site-preparation", progress: 0, resources: "Geotechnical Team", notes: "" },
-    { id: "t3", name: "Foundation Excavation", startDate: new Date(today), duration: 7, dependencies: ["t2"], category: "foundation", progress: 0, resources: "JCB, Laborers", notes: "" },
-    { id: "t4", name: "PCC (Plain Cement Concrete)", startDate: new Date(today), duration: 2, dependencies: ["t3"], category: "foundation", progress: 0, resources: "Mason, RMC", notes: "" },
-    { id: "t5", name: "Footing Reinforcement", startDate: new Date(today), duration: 5, dependencies: ["t4"], category: "foundation", progress: 0, resources: "Bar Benders, Steel", notes: "" },
-    { id: "t6", name: "Footing Concrete", startDate: new Date(today), duration: 2, dependencies: ["t5"], category: "foundation", progress: 0, resources: "RMC, Vibrator", notes: "" },
-    { id: "t7", name: "Column Reinforcement", startDate: new Date(today), duration: 8, dependencies: ["t6"], category: "structure", progress: 0, resources: "Bar Benders", notes: "" },
-    { id: "t8", name: "Column Casting", startDate: new Date(today), duration: 3, dependencies: ["t7"], category: "structure", progress: 0, resources: "Shuttering, RMC", notes: "" },
-    { id: "t9", name: "Beam & Slab Reinforcement", startDate: new Date(today), duration: 10, dependencies: ["t8"], category: "structure", progress: 0, resources: "Bar Benders, Steel", notes: "" },
-    { id: "t10", name: "Slab Casting", startDate: new Date(today), duration: 2, dependencies: ["t9"], category: "structure", progress: 0, resources: "RMC, Pump", notes: "" },
-    { id: "t11", name: "Curing Period", startDate: new Date(today), duration: 14, dependencies: ["t10"], category: "structure", progress: 0, resources: "Laborers", notes: "Minimum 14 days curing" },
-    { id: "t12", name: "Brick Masonry", startDate: new Date(today), duration: 12, dependencies: ["t11"], category: "masonry", progress: 0, resources: "Masons, Bricks", notes: "" },
-    { id: "t13", name: "Plumbing Rough-In", startDate: new Date(today), duration: 8, dependencies: ["t12"], category: "plumbing", progress: 0, resources: "Plumber, PVC", notes: "" },
-    { id: "t14", name: "Electrical Conduit", startDate: new Date(today), duration: 8, dependencies: ["t12"], category: "electrical", progress: 0, resources: "Electrician", notes: "" },
-    { id: "t15", name: "Plastering", startDate: new Date(today), duration: 10, dependencies: ["t13", "t14"], category: "finishing", progress: 0, resources: "Masons, Putty", notes: "" },
-    { id: "t16", name: "Roofing & Waterproofing", startDate: new Date(today), duration: 6, dependencies: ["t11"], category: "roofing", progress: 0, resources: "Waterproofing Crew", notes: "" },
-    { id: "t17", name: "Flooring & Tiling", startDate: new Date(today), duration: 10, dependencies: ["t15"], category: "finishing", progress: 0, resources: "Tile Installer", notes: "" },
-    { id: "t18", name: "Painting", startDate: new Date(today), duration: 8, dependencies: ["t17"], category: "finishing", progress: 0, resources: "Painters", notes: "" },
-    { id: "t19", name: "Electrical Fixtures", startDate: new Date(today), duration: 5, dependencies: ["t17"], category: "electrical", progress: 0, resources: "Electrician", notes: "" },
-    { id: "t20", name: "Plumbing Fixtures", startDate: new Date(today), duration: 4, dependencies: ["t17"], category: "plumbing", progress: 0, resources: "Plumber", notes: "" },
-    { id: "t21", name: "Final Inspection", startDate: new Date(today), duration: 2, dependencies: ["t18", "t19", "t20", "t16"], category: "inspection", progress: 0, resources: "Engineer", notes: "" },
-  ];
+  return [];
 }
