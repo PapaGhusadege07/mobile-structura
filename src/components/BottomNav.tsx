@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, Scan, BarChart3, Settings, Ruler, Droplets, TrendingUp, LineChart, Calculator, IndianRupee, Store, Menu, X } from "lucide-react";
+import { Home, Scan, BarChart3, Settings, Ruler, Droplets, TrendingUp, LineChart, Calculator, IndianRupee, Store, Menu, X, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
