@@ -89,7 +89,7 @@ export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
           </div>
 
           {/* Bars */}
-          <ScrollArea className="flex-1" orientation="horizontal">
+          <div className="flex-1 overflow-x-auto">
             <div style={{ width: chartWidth, position: "relative" }}>
               {tasks.map((task, idx) => {
                 const startOffset = differenceInDays(task.startDate, projectStart);
