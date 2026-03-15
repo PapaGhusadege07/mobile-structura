@@ -50,9 +50,8 @@ export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
         <div className="shrink-0 border-r border-border px-3 py-2 font-medium text-xs text-muted-foreground" style={{ width: labelWidth }}>
           Task Name
         </div>
-        <ScrollArea className="flex-1" orientation="horizontal">
+        <div className="flex-1 overflow-x-auto">
           <div style={{ width: chartWidth }}>
-            {/* Month row */}
             <div className="flex">
               {months.map((m, i) => (
                 <div
@@ -65,7 +64,7 @@ export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
               ))}
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Body */}
