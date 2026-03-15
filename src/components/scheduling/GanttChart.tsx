@@ -146,7 +146,7 @@ export function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
                 );
               })}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </ScrollArea>
     </div>
