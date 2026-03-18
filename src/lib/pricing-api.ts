@@ -23,6 +23,15 @@ export interface PricingResponse {
   items: PricingItem[];
 }
 
+interface PricingDefinition {
+  id: string;
+  name: string;
+  symbol: string;
+  category: string;
+  unit: string;
+  proxyFor: string[];
+}
+
 /**
  * Example normalized API response:
  * {
@@ -46,7 +55,7 @@ export interface PricingResponse {
  *   ]
  * }
  */
-export const pricingDefinitions = [
+export const pricingDefinitions: PricingDefinition[] = [
   {
     id: "steel-hrc",
     name: "Steel Coil (HRC)",
@@ -79,38 +88,43 @@ export const pricingDefinitions = [
     unit: "USD / barrel",
     proxyFor: ["Bitumen", "Transport Costs"],
   },
-] as const;
+];
 
-export const fallbackPricingResponse: PricingResponse = {
-  source: "fallback",
-  fetchedAt: new Date().toISOString(),
-  items: pricingDefinitions.map((definition) => ({
+function createFallbackItem(definition: PricingDefinition): PricingItem {
+  return {
     ...definition,
+    proxyFor: [...definition.proxyFor],
     price: null,
     currency: "USD",
     lastUpdated: null,
     previousClose: null,
     changePercent: null,
-    status: "unavailable" as const,
-  })),
+    status: "unavailable",
+  };
+}
+
+export const fallbackPricingResponse: PricingResponse = {
+  source: "fallback",
+  fetchedAt: new Date().toISOString(),
+  items: pricingDefinitions.map(createFallbackItem),
 };
 
 const INVOKE_TIMEOUT_MS = 6000;
 
-function normalizeItem(item: Partial<PricingItem>, fallback: (typeof pricingDefinitions)[number]): PricingItem {
+function normalizeItem(item: Partial<PricingItem> | undefined, fallback: PricingDefinition): PricingItem {
   return {
-    id: item.id ?? fallback.id,
-    name: item.name ?? fallback.name,
-    symbol: item.symbol ?? fallback.symbol,
-    category: item.category ?? fallback.category,
-    unit: item.unit ?? fallback.unit,
-    price: typeof item.price === "number" ? item.price : null,
-    currency: item.currency ?? "USD",
-    lastUpdated: item.lastUpdated ?? null,
-    previousClose: typeof item.previousClose === "number" ? item.previousClose : null,
-    changePercent: typeof item.changePercent === "number" ? item.changePercent : null,
-    status: item.status === "available" ? "available" : "unavailable",
-    proxyFor: Array.isArray(item.proxyFor) ? item.proxyFor : [...fallback.proxyFor],
+    id: item?.id ?? fallback.id,
+    name: item?.name ?? fallback.name,
+    symbol: item?.symbol ?? fallback.symbol,
+    category: item?.category ?? fallback.category,
+    unit: item?.unit ?? fallback.unit,
+    price: typeof item?.price === "number" ? item.price : null,
+    currency: item?.currency ?? "USD",
+    lastUpdated: item?.lastUpdated ?? null,
+    previousClose: typeof item?.previousClose === "number" ? item.previousClose : null,
+    changePercent: typeof item?.changePercent === "number" ? item.changePercent : null,
+    status: item?.status === "available" ? "available" : "unavailable",
+    proxyFor: Array.isArray(item?.proxyFor) ? [...item.proxyFor] : [...fallback.proxyFor],
   };
 }
 
