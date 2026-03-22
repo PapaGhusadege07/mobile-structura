@@ -5,19 +5,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-card hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-card-hover",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-card hover:shadow-card-hover",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:-translate-y-0.5 hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:-translate-y-0.5 hover:bg-secondary/80",
+        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        hero: "gradient-accent text-accent-foreground font-semibold shadow-glow hover:-translate-y-0.5 hover:opacity-90 hover:shadow-card-hover",
-        scan: "rounded-full bg-accent text-accent-foreground font-semibold shadow-glow hover:-translate-y-0.5 hover:shadow-card-hover",
-        glass: "glass hover:-translate-y-0.5 hover:bg-background/90",
+        hero: "gradient-accent text-accent-foreground font-semibold shadow-glow hover:opacity-90 hover:shadow-lg",
+        scan: "bg-accent text-accent-foreground font-semibold rounded-full shadow-glow hover:shadow-lg active:scale-95",
+        glass: "glass hover:bg-background/90",
       },
       size: {
         default: "h-10 px-4 py-2",
