@@ -62,9 +62,9 @@ export function DesignView() {
     <div className="min-h-screen pb-24 px-4 pt-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Design Tools</h1>
+        <h1 className="text-2xl font-bold">Structural Design</h1>
         <p className="text-muted-foreground text-sm">
-          Parametric structural design with auto-calculations
+          Parametric design with IS code calculations
         </p>
       </div>
 
@@ -133,18 +133,11 @@ export function DesignView() {
         {/* 3D View Tab */}
         <TabsContent value="3d" className="mt-0">
           {currentDesign.type && currentDesign.input && currentDesign.result && (
-            <div className="space-y-4">
-              <div className="rounded-xl overflow-hidden border border-border">
-                <Structural3DViewer
-                  type={currentDesign.type}
-                  input={currentDesign.input}
-                  result={currentDesign.result}
-                />
-              </div>
-              <div className="text-center text-sm text-muted-foreground">
-                Drag to rotate • Scroll to zoom • Shift+drag to pan
-              </div>
-            </div>
+            <Structural3DViewer
+              type={currentDesign.type}
+              input={currentDesign.input}
+              result={currentDesign.result}
+            />
           )}
         </TabsContent>
 
