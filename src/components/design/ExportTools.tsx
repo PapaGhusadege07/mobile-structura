@@ -36,7 +36,7 @@ export function ExportTools({ type, input, result, cost }: ExportToolsProps) {
       // Title
       pdf.setFontSize(20);
       pdf.setFont("helvetica", "bold");
-      pdf.text("StructuraScan", margin, y);
+      pdf.text("Structura", margin, y);
       y += 10;
       
       pdf.setFontSize(16);
