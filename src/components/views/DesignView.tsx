@@ -133,18 +133,11 @@ export function DesignView() {
         {/* 3D View Tab */}
         <TabsContent value="3d" className="mt-0">
           {currentDesign.type && currentDesign.input && currentDesign.result && (
-            <div className="space-y-4">
-              <div className="rounded-xl overflow-hidden border border-border">
-                <Structural3DViewer
-                  type={currentDesign.type}
-                  input={currentDesign.input}
-                  result={currentDesign.result}
-                />
-              </div>
-              <div className="text-center text-sm text-muted-foreground">
-                Drag to rotate • Scroll to zoom • Shift+drag to pan
-              </div>
-            </div>
+            <Structural3DViewer
+              type={currentDesign.type}
+              input={currentDesign.input}
+              result={currentDesign.result}
+            />
           )}
         </TabsContent>
 
