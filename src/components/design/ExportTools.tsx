@@ -267,7 +267,7 @@ export function ExportTools({ type, input, result, cost }: ExportToolsProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `structurascan-${type}-${Date.now()}.dxf`;
+    a.download = `structura-${type}-${Date.now()}.dxf`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("DXF file exported for AutoCAD!");
