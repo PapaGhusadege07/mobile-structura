@@ -1,21 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
-import { 
-  type BeamDesignResult, 
-  type ColumnDesignResult, 
+import {
+  type BeamDesignResult,
+  type ColumnDesignResult,
   type FootingDesignResult,
-  type CostEstimate 
+  type SlabDesignResult,
+  type CostEstimate,
+  type CalculationStep,
 } from "@/lib/structural-calculations";
-import { 
-  Ruler, 
-  Shield, 
-  Activity, 
-  DollarSign, 
-  ArrowUpDown,
-  Box,
-  Target
+import {
+  Ruler, Shield, Activity, DollarSign, ArrowUpDown, Box, Target, SquareStack, ChevronDown, BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface ResultCardProps {
   icon: React.ComponentType<{ className?: string }>;
@@ -38,8 +36,8 @@ function ResultCard({ icon: Icon, label, value, unit, status, className }: Resul
         {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
       </div>
       {status && (
-        <StatusBadge 
-          status={status === "safe" ? "healthy" : status === "warning" ? "warning" : "critical"} 
+        <StatusBadge
+          status={status === "safe" ? "healthy" : status === "warning" ? "warning" : "critical"}
           className="mt-2 text-xs"
         />
       )}
@@ -47,15 +45,50 @@ function ResultCard({ icon: Icon, label, value, unit, status, className }: Resul
   );
 }
 
-interface BeamResultsProps {
-  result: BeamDesignResult;
-  cost: CostEstimate;
+function StepByStepCalc({ steps }: { steps: CalculationStep[] }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger asChild>
+        <button className="w-full flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-accent" />
+            <span className="text-sm font-medium">Step-by-Step Calculations ({steps.length} steps)</span>
+          </div>
+          <ChevronDown className={cn("w-4 h-4 transition-transform", isOpen && "rotate-180")} />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="mt-2 space-y-3">
+          {steps.map((step, i) => (
+            <div key={i} className="p-3 rounded-lg bg-muted/20 border border-border/30">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-semibold text-foreground">
+                  Step {i + 1}: {step.label}
+                </span>
+                {step.clause && (
+                  <span className="text-[10px] font-mono text-accent bg-accent/10 px-2 py-0.5 rounded">
+                    {step.clause}
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground font-mono space-y-0.5">
+                <div>{step.formula}</div>
+                <div className="text-foreground/70">{step.substitution}</div>
+                <div className="font-semibold text-foreground">{step.result}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
 }
 
-export function BeamResults({ result, cost }: BeamResultsProps) {
+export function BeamResults({ result, cost }: { result: BeamDesignResult; cost: CostEstimate }) {
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Status Header */}
       <Card variant={result.status === "safe" ? "default" : "status"}>
         {result.status !== "safe" && (
           <div className={cn("h-1", result.status === "warning" ? "bg-warning" : "bg-destructive")} />
@@ -63,21 +96,18 @@ export function BeamResults({ result, cost }: BeamResultsProps) {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Ruler className="w-5 h-5 text-accent" />
-              Beam Design Results
+              <Ruler className="w-5 h-5 text-accent" />Beam Design Results
             </CardTitle>
-            <StatusBadge 
+            <StatusBadge
               status={result.status === "safe" ? "healthy" : result.status === "warning" ? "warning" : "critical"}
               label={result.status === "safe" ? "Design Safe" : result.status === "warning" ? "Check Required" : "Redesign Needed"}
             />
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Reinforcement */}
           <div>
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-primary" />
-              Reinforcement Details
+              <Shield className="w-4 h-4 text-primary" />Reinforcement Details
             </h4>
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 bg-primary/5 rounded-lg">
@@ -96,51 +126,23 @@ export function BeamResults({ result, cost }: BeamResultsProps) {
               </div>
             </div>
           </div>
-
-          {/* Design Checks */}
           <div className="grid grid-cols-2 gap-3">
-            <ResultCard
-              icon={Activity}
-              label="Ultimate Moment"
-              value={result.moments.ultimate}
-              unit="kNm"
-            />
-            <ResultCard
-              icon={Target}
-              label="Moment Capacity"
-              value={result.moments.resistance}
-              unit="kNm"
-              status={result.moments.ultimate <= result.moments.resistance ? "safe" : "unsafe"}
-            />
-            <ResultCard
-              icon={ArrowUpDown}
-              label="Deflection"
-              value={result.deflection.calculated}
-              unit="mm"
-            />
-            <ResultCard
-              icon={ArrowUpDown}
-              label="Allowable"
-              value={result.deflection.allowable}
-              unit="mm"
-              status={result.deflection.calculated <= result.deflection.allowable ? "safe" : "unsafe"}
-            />
+            <ResultCard icon={Activity} label="Ultimate Moment" value={result.moments.ultimate} unit="kNm" />
+            <ResultCard icon={Target} label="Moment Capacity" value={result.moments.resistance} unit="kNm"
+              status={result.moments.ultimate <= result.moments.resistance ? "safe" : "unsafe"} />
+            <ResultCard icon={ArrowUpDown} label="Deflection" value={result.deflection.calculated} unit="mm" />
+            <ResultCard icon={ArrowUpDown} label="Allowable" value={result.deflection.allowable} unit="mm"
+              status={result.deflection.calculated <= result.deflection.allowable ? "safe" : "unsafe"} />
           </div>
+          {result.steps && <StepByStepCalc steps={result.steps} />}
         </CardContent>
       </Card>
-
-      {/* Cost Estimate */}
       <CostCard cost={cost} />
     </div>
   );
 }
 
-interface ColumnResultsProps {
-  result: ColumnDesignResult;
-  cost: CostEstimate;
-}
-
-export function ColumnResults({ result, cost }: ColumnResultsProps) {
+export function ColumnResults({ result, cost }: { result: ColumnDesignResult; cost: CostEstimate }) {
   return (
     <div className="space-y-4 animate-fade-in">
       <Card variant={result.status === "safe" ? "default" : "status"}>
@@ -150,16 +152,12 @@ export function ColumnResults({ result, cost }: ColumnResultsProps) {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Box className="w-5 h-5 text-accent" />
-              Column Design Results
+              <Box className="w-5 h-5 text-accent" />Column Design Results
             </CardTitle>
-            <StatusBadge 
-              status={result.status === "safe" ? "healthy" : result.status === "warning" ? "warning" : "critical"}
-            />
+            <StatusBadge status={result.status === "safe" ? "healthy" : result.status === "warning" ? "warning" : "critical"} />
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Reinforcement */}
           <div>
             <h4 className="text-sm font-medium mb-3">Reinforcement Details</h4>
             <div className="grid grid-cols-2 gap-3">
@@ -179,39 +177,33 @@ export function ColumnResults({ result, cost }: ColumnResultsProps) {
               </div>
             </div>
           </div>
-
-          {/* Capacity */}
           <div className="grid grid-cols-3 gap-3">
             <ResultCard icon={ArrowUpDown} label="Axial Capacity" value={result.capacity.axial} unit="kN" />
             <ResultCard icon={Activity} label="Moment X" value={result.capacity.momentX} unit="kNm" />
             <ResultCard icon={Activity} label="Moment Y" value={result.capacity.momentY} unit="kNm" />
           </div>
-
-          {/* Slenderness */}
           <div className="p-3 bg-muted/50 rounded-lg flex items-center justify-between">
             <div>
               <div className="text-sm font-medium">Slenderness Ratio</div>
               <div className="text-xs text-muted-foreground">λ = {result.slenderness.ratio}</div>
+              {result.slenderness.additionalMoment > 0 && (
+                <div className="text-xs text-warning">Additional Moment: {result.slenderness.additionalMoment} kNm</div>
+              )}
             </div>
-            <StatusBadge 
+            <StatusBadge
               status={result.slenderness.classification === "short" ? "healthy" : "warning"}
               label={result.slenderness.classification === "short" ? "Short Column" : "Slender Column"}
             />
           </div>
+          {result.steps && <StepByStepCalc steps={result.steps} />}
         </CardContent>
       </Card>
-
       <CostCard cost={cost} />
     </div>
   );
 }
 
-interface FootingResultsProps {
-  result: FootingDesignResult;
-  cost: CostEstimate;
-}
-
-export function FootingResults({ result, cost }: FootingResultsProps) {
+export function FootingResults({ result, cost }: { result: FootingDesignResult; cost: CostEstimate }) {
   return (
     <div className="space-y-4 animate-fade-in">
       <Card variant={result.status === "safe" ? "default" : "status"}>
@@ -221,16 +213,12 @@ export function FootingResults({ result, cost }: FootingResultsProps) {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Box className="w-5 h-5 text-accent" />
-              Footing Design Results
+              <Box className="w-5 h-5 text-accent" />Footing Design Results
             </CardTitle>
-            <StatusBadge 
-              status={result.status === "safe" ? "healthy" : result.status === "warning" ? "warning" : "critical"}
-            />
+            <StatusBadge status={result.status === "safe" ? "healthy" : result.status === "warning" ? "warning" : "critical"} />
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Dimensions */}
           <div>
             <h4 className="text-sm font-medium mb-3">Footing Dimensions</h4>
             <div className="grid grid-cols-3 gap-3">
@@ -251,38 +239,118 @@ export function FootingResults({ result, cost }: FootingResultsProps) {
               </div>
             </div>
           </div>
-
-          {/* Reinforcement */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 bg-accent/5 rounded-lg">
-              <div className="text-xs text-muted-foreground">Reinforcement X-direction</div>
+              <div className="text-xs text-muted-foreground">Reinforcement X</div>
               <div className="font-semibold font-mono">{result.reinforcement.mainBarsX}</div>
             </div>
             <div className="p-3 bg-accent/5 rounded-lg">
-              <div className="text-xs text-muted-foreground">Reinforcement Y-direction</div>
+              <div className="text-xs text-muted-foreground">Reinforcement Y</div>
               <div className="font-semibold font-mono">{result.reinforcement.mainBarsY}</div>
             </div>
           </div>
-
-          {/* Pressure Check */}
           <div className="grid grid-cols-2 gap-3">
-            <ResultCard
-              icon={ArrowUpDown}
-              label="Soil Pressure"
-              value={result.pressure.actual}
-              unit="kN/m²"
-              status={result.pressure.actual <= result.pressure.allowable ? "safe" : "unsafe"}
-            />
-            <ResultCard
-              icon={Target}
-              label="Allowable SBC"
-              value={result.pressure.allowable}
-              unit="kN/m²"
-            />
+            <ResultCard icon={ArrowUpDown} label="Soil Pressure" value={result.pressure.actual} unit="kN/m²"
+              status={result.pressure.actual <= result.pressure.allowable ? "safe" : "unsafe"} />
+            <ResultCard icon={Target} label="Allowable SBC" value={result.pressure.allowable} unit="kN/m²" />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <ResultCard icon={Shield} label="Punching Shear" value={result.punchingShear.calculated} unit="kN"
+              status={result.punchingShear.calculated <= result.punchingShear.resistance ? "safe" : "unsafe"} />
+            <ResultCard icon={Shield} label="One-Way Shear" value={result.oneWayShear.calculated} unit="kN"
+              status={result.oneWayShear.calculated <= result.oneWayShear.resistance ? "safe" : "unsafe"} />
+          </div>
+          {result.steps && <StepByStepCalc steps={result.steps} />}
         </CardContent>
       </Card>
+      <CostCard cost={cost} />
+    </div>
+  );
+}
 
+export function SlabResults({ result, cost }: { result: SlabDesignResult; cost: CostEstimate }) {
+  return (
+    <div className="space-y-4 animate-fade-in">
+      <Card variant={result.status === "safe" ? "default" : "status"}>
+        {result.status !== "safe" && (
+          <div className={cn("h-1", result.status === "warning" ? "bg-warning" : "bg-destructive")} />
+        )}
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <SquareStack className="w-5 h-5 text-accent" />
+              Slab Design Results
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono bg-accent/10 text-accent px-2 py-0.5 rounded">
+                {result.slabType.toUpperCase()}
+              </span>
+              <StatusBadge status={result.status === "safe" ? "healthy" : result.status === "warning" ? "warning" : "critical"} />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 bg-primary/5 rounded-lg text-center">
+              <div className="text-xs text-muted-foreground">Slab Thickness</div>
+              <div className="font-semibold font-mono text-xl">{result.thickness}</div>
+              <div className="text-xs text-muted-foreground">mm</div>
+            </div>
+            <div className="p-3 bg-primary/5 rounded-lg text-center">
+              <div className="text-xs text-muted-foreground">Effective Depth</div>
+              <div className="font-semibold font-mono text-xl">{result.effectiveDepth}</div>
+              <div className="text-xs text-muted-foreground">mm</div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-primary" />Reinforcement
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-accent/5 rounded-lg">
+                <div className="text-xs text-muted-foreground">Short Span (Lx)</div>
+                <div className="font-semibold font-mono">{result.reinforcement.shortSpanBars}</div>
+                <div className="text-xs text-muted-foreground">Ast = {result.reinforcement.shortSpanArea} mm²/m</div>
+              </div>
+              <div className="p-3 bg-accent/5 rounded-lg">
+                <div className="text-xs text-muted-foreground">{result.slabType === "one-way" ? "Distribution" : "Long Span (Ly)"}</div>
+                <div className="font-semibold font-mono">{result.reinforcement.longSpanBars}</div>
+                <div className="text-xs text-muted-foreground">Ast = {result.reinforcement.longSpanArea} mm²/m</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-medium mb-3">Bending Moments (kNm/m)</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <ResultCard icon={Activity} label="Mx+ (Short +ve)" value={result.moments.shortSpanPositive} unit="kNm/m" />
+              <ResultCard icon={Activity} label="Mx- (Short -ve)" value={result.moments.shortSpanNegative} unit="kNm/m" />
+              {result.slabType === "two-way" && (
+                <>
+                  <ResultCard icon={Activity} label="My+ (Long +ve)" value={result.moments.longSpanPositive} unit="kNm/m" />
+                  <ResultCard icon={Activity} label="My- (Long -ve)" value={result.moments.longSpanNegative} unit="kNm/m" />
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="p-3 bg-muted/50 rounded-lg flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium">Deflection Check (L/d)</div>
+              <div className="text-xs text-muted-foreground">
+                Actual: {result.deflection.spanDepthRatio} | Allowable: {result.deflection.allowableRatio}
+              </div>
+            </div>
+            <StatusBadge
+              status={result.deflection.spanDepthRatio <= result.deflection.allowableRatio ? "healthy" : "critical"}
+              label={result.deflection.spanDepthRatio <= result.deflection.allowableRatio ? "OK" : "Fails"}
+            />
+          </div>
+
+          {result.steps && <StepByStepCalc steps={result.steps} />}
+        </CardContent>
+      </Card>
       <CostCard cost={cost} />
     </div>
   );
@@ -293,8 +361,7 @@ function CostCard({ cost }: { cost: CostEstimate }) {
     <Card variant="elevated">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <DollarSign className="w-5 h-5 text-success" />
-          Cost Estimate
+          <DollarSign className="w-5 h-5 text-success" />Cost Estimate
         </CardTitle>
       </CardHeader>
       <CardContent>
