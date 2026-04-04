@@ -20,33 +20,22 @@ interface Structural3DViewerProps {
 interface BarConfig {
   count: number;
   diameter: number;
-  bentUpCount: number;
   offsetX: number;
   offsetY: number;
   offsetZ: number;
 }
 
-const defaultBarConfig: BarConfig = { count: 4, diameter: 16, bentUpCount: 1, offsetX: 0, offsetY: 0, offsetZ: 0 };
+const defaultBarConfig: BarConfig = { count: 4, diameter: 16, offsetX: 0, offsetY: 0, offsetZ: 0 };
 
-function BentUpBar({ position, length, depth, barRadius }: {
-  position: [number, number, number]; length: number; depth: number; barRadius: number;
+// Curtailed bar: a straight bar that only extends a portion of the span
+function CurtailedBar({ position, fullLength, curtailmentRatio, barRadius }: {
+  position: [number, number, number]; fullLength: number; curtailmentRatio: number; barRadius: number;
 }) {
-  const bendLength = depth * 0.6;
-  const straightLen = length * 0.3;
-  const bendHyp = bendLength / Math.sin(Math.PI / 4);
-  const points = [
-    new THREE.Vector3(-length / 2, 0, 0),
-    new THREE.Vector3(-length / 2 + straightLen, 0, 0),
-    new THREE.Vector3(-length / 2 + straightLen + bendHyp * Math.cos(Math.PI / 4), bendLength, 0),
-    new THREE.Vector3(length / 2 - straightLen - bendHyp * Math.cos(Math.PI / 4), bendLength, 0),
-    new THREE.Vector3(length / 2 - straightLen, 0, 0),
-    new THREE.Vector3(length / 2, 0, 0),
-  ];
-  const curve = new THREE.CatmullRomCurve3(points, false, "centripetal", 0.1);
-  const tubeGeom = new THREE.TubeGeometry(curve, 32, barRadius, 8, false);
+  const curtailedLength = fullLength * curtailmentRatio;
   return (
-    <mesh position={position} geometry={tubeGeom}>
-      <meshStandardMaterial color="#ef4444" metalness={0.6} roughness={0.3} />
+    <mesh position={position} rotation={[0, 0, Math.PI / 2]}>
+      <cylinderGeometry args={[barRadius, barRadius, curtailedLength, 16]} />
+      <meshStandardMaterial color="#a855f7" metalness={0.6} roughness={0.3} />
     </mesh>
   );
 }
@@ -68,37 +57,46 @@ function BeamMesh({ input, config }: { input: BeamInput; config: BarConfig }) {
     return positions;
   }, [config, width]);
 
-  const bentUpPositions = useMemo(() => {
+  // Curtailed bars: alternate bars curtailed to 60% of span (standard practice)
+  const curtailedPositions = useMemo(() => {
     const positions: [number, number, number][] = [];
-    const spacing = (width - 0.08) / Math.max(config.bentUpCount, 1);
-    for (let i = 0; i < config.bentUpCount; i++) {
-      const z = config.bentUpCount === 1 ? 0 : -((width - 0.08) / 2) + i * spacing + spacing / 2;
-      positions.push([config.offsetX * 0.01, 0.03, z]);
+    if (config.count >= 3) {
+      // Curtail every other bar
+      const spacing = (width - 0.06) / Math.max(config.count - 1, 1);
+      for (let i = 1; i < config.count; i += 2) {
+        const z = -((width - 0.06) / 2) + i * spacing;
+        positions.push([config.offsetX * 0.01, 0.03 + config.offsetY * 0.01, z + config.offsetZ * 0.01]);
+      }
     }
     return positions;
   }, [config, width]);
 
   return (
     <group>
+      {/* Concrete body */}
       <mesh position={[0, depth / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[length, depth, width]} />
         <meshStandardMaterial color="hsl(215, 15%, 65%)" transparent opacity={0.4} />
       </mesh>
+      {/* Full-length tension bars */}
       {tensionBarPositions.map((pos, i) => (
         <mesh key={`t-${i}`} position={pos} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[barRadius, barRadius, length - 0.05, 16]} />
           <meshStandardMaterial color="#0ea5e9" metalness={0.6} roughness={0.3} />
         </mesh>
       ))}
-      {bentUpPositions.map((pos, i) => (
-        <BentUpBar key={`bent-${i}`} position={pos} length={length - 0.1} depth={depth - 0.06} barRadius={barRadius} />
+      {/* Curtailed bars (shorter, shown in purple) */}
+      {curtailedPositions.map((pos, i) => (
+        <CurtailedBar key={`curt-${i}`} position={pos} fullLength={length - 0.05} curtailmentRatio={0.6} barRadius={barRadius * 0.9} />
       ))}
+      {/* Compression bars (top) */}
       {[0, 1].map(i => (
         <mesh key={`c-${i}`} position={[0, depth - 0.03, (i - 0.5) * (width - 0.06)]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.006, 0.006, length - 0.05, 12]} />
           <meshStandardMaterial color="#22c55e" metalness={0.5} roughness={0.4} />
         </mesh>
       ))}
+      {/* Stirrups */}
       {[...Array(Math.floor(length / 0.2))].map((_, i) => {
         const x = (i - Math.floor(length / 0.4)) * 0.2;
         const hw = (width - 0.04) / 2;
@@ -113,6 +111,23 @@ function BeamMesh({ input, config }: { input: BeamInput; config: BarConfig }) {
           </group>
         );
       })}
+      {/* Curtailment markers (small rings at curtailment points) */}
+      {curtailedPositions.map((pos, i) => {
+        const curtailLen = (length - 0.05) * 0.6;
+        return (
+          <group key={`cm-${i}`}>
+            <mesh position={[pos[0] - curtailLen / 2, pos[1], pos[2]]} rotation={[0, 0, Math.PI / 2]}>
+              <torusGeometry args={[barRadius * 2, barRadius * 0.5, 8, 16]} />
+              <meshStandardMaterial color="#ef4444" />
+            </mesh>
+            <mesh position={[pos[0] + curtailLen / 2, pos[1], pos[2]]} rotation={[0, 0, Math.PI / 2]}>
+              <torusGeometry args={[barRadius * 2, barRadius * 0.5, 8, 16]} />
+              <meshStandardMaterial color="#ef4444" />
+            </mesh>
+          </group>
+        );
+      })}
+      {/* Supports */}
       <mesh position={[-length / 2 + 0.1, -0.1, 0]}>
         <boxGeometry args={[0.2, 0.2, width + 0.1]} />
         <meshStandardMaterial color="hsl(215, 15%, 40%)" />
@@ -219,37 +234,28 @@ function SlabMesh({ input, result, config }: { input: SlabInput; result: SlabDes
 
   return (
     <group>
-      {/* Slab body */}
       <mesh position={[0, thickness / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[ly, thickness, lx]} />
         <meshStandardMaterial color="hsl(215, 15%, 65%)" transparent opacity={0.35} />
       </mesh>
-
-      {/* Short span bars (bottom, along X) */}
       {[...Array(Math.floor(ly / barSpacingX))].map((_, i) => (
         <mesh key={`sx-${i}`} position={[
           (i - Math.floor(ly / barSpacingX / 2)) * barSpacingX + config.offsetX * 0.01,
-          0.02 + config.offsetY * 0.005,
-          0
+          0.02 + config.offsetY * 0.005, 0
         ]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.005, 0.005, lx - 0.1, 8]} />
           <meshStandardMaterial color="#0ea5e9" metalness={0.6} />
         </mesh>
       ))}
-
-      {/* Long span / distribution bars */}
       {[...Array(Math.floor(lx / barSpacingY))].map((_, i) => (
         <mesh key={`sy-${i}`} position={[
-          0,
-          0.03 + config.offsetY * 0.005,
+          0, 0.03 + config.offsetY * 0.005,
           (i - Math.floor(lx / barSpacingY / 2)) * barSpacingY + config.offsetZ * 0.01
         ]}>
           <boxGeometry args={[ly - 0.1, 0.01, 0.01]} />
           <meshStandardMaterial color="#22c55e" metalness={0.5} />
         </mesh>
       ))}
-
-      {/* Support beams */}
       {[-lx / 2, lx / 2].map((z, i) => (
         <mesh key={`sb-${i}`} position={[0, -0.1, z]}>
           <boxGeometry args={[ly + 0.1, 0.2, 0.15]} />
@@ -279,7 +285,6 @@ export function Structural3DViewer({ type, input, result }: Structural3DViewerPr
     ...defaultBarConfig,
     count: defaultCount,
     diameter: defaultDia,
-    bentUpCount: type === "beam" ? Math.max(1, Math.floor(defaultCount / 2)) : 0,
   });
 
   const steelInfo = useMemo(() => {
@@ -288,17 +293,19 @@ export function Structural3DViewer({ type, input, result }: Structural3DViewerPr
       const barArea = Math.PI * Math.pow(barConfig.diameter / 2, 2);
       const totalArea = barConfig.count * barArea;
       const mainWeight = totalArea * beamInput.spanLength * 1.1 * 0.00785;
-      const bentWeight = barConfig.bentUpCount * barArea * beamInput.spanLength * 1.15 * 0.00785;
-      const stirrupWeight = (mainWeight + bentWeight) * 0.25;
-      const totalWeight = mainWeight + bentWeight + stirrupWeight;
-      return { mainWeight: +mainWeight.toFixed(1), bentWeight: +bentWeight.toFixed(1), stirrupWeight: +stirrupWeight.toFixed(1), totalWeight: +totalWeight.toFixed(1), totalCost: Math.round(totalWeight * 72) };
+      // Curtailed bars: half the bars at 60% length
+      const curtailedCount = Math.floor(barConfig.count / 2);
+      const curtailedWeight = curtailedCount * barArea * beamInput.spanLength * 0.6 * 0.00785;
+      const stirrupWeight = (mainWeight + curtailedWeight) * 0.25;
+      const totalWeight = mainWeight + curtailedWeight + stirrupWeight;
+      return { mainWeight: +mainWeight.toFixed(1), curtailedWeight: +curtailedWeight.toFixed(1), stirrupWeight: +stirrupWeight.toFixed(1), totalWeight: +totalWeight.toFixed(1) };
     }
     if (type === "slab") {
       const slabInput = input as SlabInput;
       const slabResult = result as SlabDesignResult;
       const area = slabInput.spanLx * slabInput.spanLy;
       const steelWeight = (slabResult.reinforcement.shortSpanArea + slabResult.reinforcement.longSpanArea) * Math.sqrt(area) * 0.00785;
-      return { mainWeight: +steelWeight.toFixed(1), bentWeight: 0, stirrupWeight: 0, totalWeight: +steelWeight.toFixed(1), totalCost: Math.round(steelWeight * 72) };
+      return { mainWeight: +steelWeight.toFixed(1), curtailedWeight: 0, stirrupWeight: 0, totalWeight: +steelWeight.toFixed(1) };
     }
     return null;
   }, [type, input, result, barConfig]);
@@ -337,7 +344,7 @@ export function Structural3DViewer({ type, input, result }: Structural3DViewerPr
           <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full" style={{ background: "hsl(215, 15%, 65%)" }} /><span className="text-muted-foreground">Concrete</span></div>
           <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-[#0ea5e9]" /><span className="text-muted-foreground">Main Steel</span></div>
           <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-[#f59e0b]" /><span className="text-muted-foreground">Stirrups/Ties</span></div>
-          {type === "beam" && <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-[#ef4444]" /><span className="text-muted-foreground">Bent-up</span></div>}
+          {type === "beam" && <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-[#a855f7]" /><span className="text-muted-foreground">Curtailed</span></div>}
           {type === "slab" && <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-[#22c55e]" /><span className="text-muted-foreground">Distribution</span></div>}
         </div>
       </div>
@@ -351,7 +358,7 @@ export function Structural3DViewer({ type, input, result }: Structural3DViewerPr
           </div>
 
           {(type === "beam") && (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs">Main Bars: {barConfig.count}</Label>
                 <Slider value={[barConfig.count]} onValueChange={([v]) => setBarConfig(c => ({ ...c, count: v }))} min={2} max={8} step={1} />
@@ -359,10 +366,6 @@ export function Structural3DViewer({ type, input, result }: Structural3DViewerPr
               <div className="space-y-2">
                 <Label className="text-xs">Diameter: {barConfig.diameter}mm</Label>
                 <Slider value={[barConfig.diameter]} onValueChange={([v]) => setBarConfig(c => ({ ...c, diameter: v }))} min={10} max={32} step={2} />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Bent-up: {barConfig.bentUpCount}</Label>
-                <Slider value={[barConfig.bentUpCount]} onValueChange={([v]) => setBarConfig(c => ({ ...c, bentUpCount: v }))} min={0} max={4} step={1} />
               </div>
             </div>
           )}
@@ -380,7 +383,20 @@ export function Structural3DViewer({ type, input, result }: Structural3DViewerPr
             </div>
           )}
 
-          {/* Axis Controls (all types) */}
+          {(type === "footing" || type === "slab") && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs">Main Bars: {barConfig.count}</Label>
+                <Slider value={[barConfig.count]} onValueChange={([v]) => setBarConfig(c => ({ ...c, count: v }))} min={4} max={12} step={1} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Diameter: {barConfig.diameter}mm</Label>
+                <Slider value={[barConfig.diameter]} onValueChange={([v]) => setBarConfig(c => ({ ...c, diameter: v }))} min={8} max={20} step={2} />
+              </div>
+            </div>
+          )}
+
+          {/* Axis Controls */}
           <div className="grid grid-cols-3 gap-4 pt-2 border-t border-border">
             <div className="space-y-2">
               <Label className="text-xs text-accent">X-Axis: {barConfig.offsetX}</Label>
@@ -402,10 +418,10 @@ export function Structural3DViewer({ type, input, result }: Structural3DViewerPr
                 <div className="text-xs text-muted-foreground">Main Bars</div>
                 <div className="font-mono text-sm font-semibold">{steelInfo.mainWeight} kg</div>
               </div>
-              {steelInfo.bentWeight > 0 && (
+              {steelInfo.curtailedWeight > 0 && (
                 <div className="space-y-1">
-                  <div className="text-xs text-muted-foreground">Bent-up Bars</div>
-                  <div className="font-mono text-sm font-semibold">{steelInfo.bentWeight} kg</div>
+                  <div className="text-xs text-muted-foreground">Curtailed Bars</div>
+                  <div className="font-mono text-sm font-semibold">{steelInfo.curtailedWeight} kg</div>
                 </div>
               )}
               {steelInfo.stirrupWeight > 0 && (
@@ -417,10 +433,6 @@ export function Structural3DViewer({ type, input, result }: Structural3DViewerPr
               <div className="space-y-1">
                 <div className="text-xs text-muted-foreground">Total Steel</div>
                 <div className="font-mono text-sm font-bold text-accent">{steelInfo.totalWeight} kg</div>
-              </div>
-              <div className="col-span-2 p-3 rounded-lg bg-accent/10 flex items-center justify-between">
-                <span className="text-sm font-medium">Reinforcement Cost</span>
-                <span className="font-mono font-bold text-lg text-accent">₹{steelInfo.totalCost.toLocaleString()}</span>
               </div>
             </div>
           )}
