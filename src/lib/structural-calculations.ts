@@ -247,6 +247,38 @@ function r(val: number, decimals: number = 2): number {
   return Math.round(val * Math.pow(10, decimals)) / Math.pow(10, decimals);
 }
 
+// ============ IS 456 TABLE 19 – τc (N/mm²) ============
+
+const tauCTable: { pt: number; M20: number; M25: number; M30: number; M35: number; M40: number }[] = [
+  { pt: 0.15, M20: 0.28, M25: 0.29, M30: 0.29, M35: 0.29, M40: 0.30 },
+  { pt: 0.25, M20: 0.36, M25: 0.36, M30: 0.37, M35: 0.37, M40: 0.38 },
+  { pt: 0.50, M20: 0.48, M25: 0.49, M30: 0.50, M35: 0.50, M40: 0.51 },
+  { pt: 0.75, M20: 0.56, M25: 0.57, M30: 0.59, M35: 0.59, M40: 0.60 },
+  { pt: 1.00, M20: 0.62, M25: 0.64, M30: 0.66, M35: 0.67, M40: 0.68 },
+  { pt: 1.25, M20: 0.67, M25: 0.70, M30: 0.71, M35: 0.73, M40: 0.74 },
+  { pt: 1.50, M20: 0.72, M25: 0.74, M30: 0.76, M35: 0.78, M40: 0.79 },
+  { pt: 1.75, M20: 0.75, M25: 0.78, M30: 0.80, M35: 0.82, M40: 0.84 },
+  { pt: 2.00, M20: 0.79, M25: 0.82, M30: 0.84, M35: 0.86, M40: 0.88 },
+  { pt: 2.25, M20: 0.81, M25: 0.85, M30: 0.88, M35: 0.90, M40: 0.92 },
+  { pt: 2.50, M20: 0.82, M25: 0.88, M30: 0.91, M35: 0.93, M40: 0.95 },
+  { pt: 2.75, M20: 0.82, M25: 0.90, M30: 0.94, M35: 0.96, M40: 0.98 },
+  { pt: 3.00, M20: 0.82, M25: 0.92, M30: 0.96, M35: 0.99, M40: 1.01 },
+];
+
+function getTauC(pt: number, grade: string): number {
+  const gradeKey = grade as keyof typeof tauCTable[0];
+  const table = tauCTable;
+  if (pt <= table[0].pt) return table[0][gradeKey] as number;
+  if (pt >= table[table.length - 1].pt) return table[table.length - 1][gradeKey] as number;
+  for (let i = 0; i < table.length - 1; i++) {
+    if (pt >= table[i].pt && pt <= table[i + 1].pt) {
+      const ratio = (pt - table[i].pt) / (table[i + 1].pt - table[i].pt);
+      return r((table[i][gradeKey] as number) + ratio * ((table[i + 1][gradeKey] as number) - (table[i][gradeKey] as number)), 3);
+    }
+  }
+  return table[table.length - 1][gradeKey] as number;
+}
+
 // ============ BEAM DESIGN (IS 456:2000) ============
 
 export function calculateBeamDesign(input: BeamInput): BeamDesignResult {
@@ -263,8 +295,8 @@ export function calculateBeamDesign(input: BeamInput): BeamDesignResult {
 
   steps.push({
     label: "Effective Depth",
-    formula: "d = D - clear cover - stirrup dia - bar dia/2",
-    substitution: `d = ${D} - 25 - 8 - 10`,
+    formula: "d = D − clear cover − stirrup dia − (bar dia / 2)",
+    substitution: `d = ${D} − 25 − 8 − 10`,
     result: `d = ${d} mm`,
     clause: "IS 456 Cl. 26.4.1",
   });
@@ -272,11 +304,11 @@ export function calculateBeamDesign(input: BeamInput): BeamDesignResult {
   // Factored load
   const wu = 1.5 * (input.deadLoad + input.liveLoad);
   steps.push({
-    label: "Factored Load",
+    label: "Factored Load (Load Factor = 1.5)",
     formula: "wu = 1.5 × (DL + LL)",
     substitution: `wu = 1.5 × (${input.deadLoad} + ${input.liveLoad})`,
     result: `wu = ${r(wu)} kN/m`,
-    clause: "IS 456 Cl. 36.4.1",
+    clause: "IS 456 Cl. 36.4.1 (Table 18)",
   });
 
   // Ultimate moment based on beam type
@@ -312,10 +344,19 @@ export function calculateBeamDesign(input: BeamInput): BeamDesignResult {
   }
 
   steps.push({
-    label: "Ultimate Shear",
+    label: "Ultimate Shear Force",
     formula: beamType === "cantilever" ? "Vu = wu × L" : beamType === "continuous" ? "Vu = 0.6 × wu × L" : "Vu = wu × L / 2",
     substitution: beamType === "cantilever" ? `Vu = ${r(wu)} × ${input.spanLength}` : beamType === "continuous" ? `Vu = 0.6 × ${r(wu)} × ${input.spanLength}` : `Vu = ${r(wu)} × ${input.spanLength} / 2`,
     result: `Vu = ${r(Vu)} kN`,
+  });
+
+  // Unit conversion step
+  const MuNmm = Mu * 1e6;
+  steps.push({
+    label: "Convert Mu to N·mm",
+    formula: "Mu (N·mm) = Mu (kNm) × 10⁶",
+    substitution: `Mu = ${r(Mu)} × 10⁶`,
+    result: `Mu = ${r(MuNmm, 0)} N·mm`,
   });
 
   // Limiting moment capacity (IS 456 Annex G)
@@ -325,38 +366,47 @@ export function calculateBeamDesign(input: BeamInput): BeamDesignResult {
 
   steps.push({
     label: "Limiting Moment Capacity",
-    formula: "Mu,lim = 0.36 × fck × b × xu,max × (d - 0.42 × xu,max)",
-    substitution: `xu,max/d = ${xuMaxD} (${input.steelGrade}), xu,max = ${r(xuMax)} mm`,
-    result: `Mu,lim = ${r(Mulim)} kNm`,
+    formula: "Mu,lim = 0.36 × fck × b × xu,max × (d − 0.42 × xu,max)",
+    substitution: `xu,max/d = ${xuMaxD} (${input.steelGrade}), xu,max = ${xuMaxD} × ${d} = ${r(xuMax)} mm\nMu,lim = 0.36 × ${concrete.fck} × ${b} × ${r(xuMax)} × (${d} − 0.42 × ${r(xuMax)}) / 10⁶`,
+    result: `Mu,lim = ${r(Mulim)} kNm → Beam is ${Mu <= Mulim ? "Singly Reinforced ✓" : "Doubly Reinforced"}`,
     clause: "IS 456 Annex G, Cl. G-1.1",
   });
 
   // Required tension reinforcement
-  const MuNmm = Mu * 1e6;
   let Ast: number;
+  let AscRequired = 0;
+
+  // Compute the discriminant term clearly
+  const discriminant = (4.6 * MuNmm) / (concrete.fck * b * d * d);
 
   if (Mu <= Mulim) {
     // Singly reinforced
-    Ast = (0.5 * concrete.fck * b * d / steel.fy) * (1 - Math.sqrt(1 - (4.6 * MuNmm) / (concrete.fck * b * d * d)));
+    const sqrtTerm = Math.sqrt(1 - discriminant);
+    Ast = (0.5 * concrete.fck * b * d / steel.fy) * (1 - sqrtTerm);
+
     steps.push({
-      label: "Tension Reinforcement (Singly Reinforced)",
-      formula: "Ast = (0.5 × fck × b × d / fy) × [1 - √(1 - 4.6Mu/(fck×b×d²))]",
-      substitution: `Ast = (0.5 × ${concrete.fck} × ${b} × ${d} / ${steel.fy}) × [1 - √(1 - 4.6×${r(MuNmm)}/(${concrete.fck}×${b}×${d}²))]`,
+      label: "Tension Reinforcement Ast (Singly Reinforced)",
+      formula: "Ast = (0.5 × fck × b × d / fy) × [1 − √(1 − 4.6Mu / (fck × b × d²))]",
+      substitution: `Inner term = 4.6 × ${r(MuNmm, 0)} / (${concrete.fck} × ${b} × ${d}²)\n= ${r(discriminant, 6)}\n√(1 − ${r(discriminant, 6)}) = ${r(sqrtTerm, 6)}\nAst = (0.5 × ${concrete.fck} × ${b} × ${d} / ${steel.fy}) × (1 − ${r(sqrtTerm, 6)})`,
       result: `Ast = ${r(Ast)} mm²`,
       clause: "IS 456 Annex G, Cl. G-1.1(b)",
     });
   } else {
-    // Doubly reinforced - calculate for Mulim
-    Ast = (0.5 * concrete.fck * b * d / steel.fy) * (1 - Math.sqrt(1 - (4.6 * Mulim * 1e6) / (concrete.fck * b * d * d)));
+    // Doubly reinforced
+    const discriminantLim = (4.6 * Mulim * 1e6) / (concrete.fck * b * d * d);
+    const sqrtTermLim = Math.sqrt(1 - discriminantLim);
+    const Ast1 = (0.5 * concrete.fck * b * d / steel.fy) * (1 - sqrtTermLim);
     const Mu2 = Mu - Mulim;
-    const dPrime = 50; // compression bar cover
+    const dPrime = 50;
     const Ast2 = (Mu2 * 1e6) / (0.87 * steel.fy * (d - dPrime));
-    Ast += Ast2;
+    Ast = Ast1 + Ast2;
+    AscRequired = (Mu2 * 1e6) / ((0.87 * steel.fy - 0.447 * concrete.fck) * (d - dPrime));
+
     steps.push({
       label: "Tension Reinforcement (Doubly Reinforced)",
-      formula: "Mu > Mu,lim → Doubly reinforced beam",
-      substitution: `Mu2 = ${r(Mu)} - ${r(Mulim)} = ${r(Mu2)} kNm, Ast2 = Mu2/(0.87×fy×(d-d'))`,
-      result: `Total Ast = ${r(Ast)} mm²`,
+      formula: "Mu > Mu,lim → Doubly reinforced beam required",
+      substitution: `Ast1 (for Mu,lim) = ${r(Ast1)} mm²\nMu2 = ${r(Mu)} − ${r(Mulim)} = ${r(Mu2)} kNm\nAst2 = Mu2 × 10⁶ / (0.87 × fy × (d − d')) = ${r(Mu2 * 1e6, 0)} / (0.87 × ${steel.fy} × (${d} − ${dPrime}))`,
+      result: `Ast1 = ${r(Ast1)} mm², Ast2 = ${r(Ast2)} mm², Total Ast = ${r(Ast)} mm²\nAsc = ${r(AscRequired)} mm²`,
       clause: "IS 456 Annex G",
     });
   }
@@ -369,63 +419,113 @@ export function calculateBeamDesign(input: BeamInput): BeamDesignResult {
     label: "Minimum Reinforcement Check",
     formula: "Ast,min = 0.85 × b × d / fy",
     substitution: `Ast,min = 0.85 × ${b} × ${d} / ${steel.fy}`,
-    result: `Ast,min = ${r(AstMin)} mm² ${AstProvided === AstMin ? "(governs)" : "(Ast governs)"}`,
+    result: `Ast,min = ${r(AstMin)} mm² → ${AstProvided > Ast ? "Ast,min governs" : "Calculated Ast governs"} → Ast required = ${r(AstProvided)} mm²`,
     clause: "IS 456 Cl. 26.5.1.1",
   });
 
   // Bar selection
   const tension = selectBars(AstProvided, 2);
-  const AscMin = Mu > Mulim ? (Mu - Mulim) * 1e6 / (0.87 * steel.fy * (d - 50)) : 0;
-  const compression = selectBars(Math.max(AscMin, 0.2 * tension.areaProvided), 2);
+  const compression = selectBars(Math.max(AscRequired, 0.2 * tension.areaProvided), 2);
 
   steps.push({
-    label: "Bar Selection",
-    formula: "Select bar diameter and count to satisfy required area",
+    label: "Bar Selection (Tension)",
+    formula: "Select economical bar diameter and count ≥ Ast required",
     substitution: `Required Ast = ${r(AstProvided)} mm²`,
-    result: `Provide ${tension.count}-${tension.diameter}mm Ø (${tension.areaProvided} mm²)`,
+    result: `Provide ${tension.count}–${tension.diameter}mm Ø bars (Ast provided = ${tension.areaProvided} mm²)`,
   });
 
-  // Shear design (IS 456 Cl. 40)
-  const tauV = (Vu * 1000) / (b * d);
-  const pt = (100 * tension.areaProvided) / (b * d);
-  // IS 456 Table 19 - shear strength of concrete
-  const tauC = 0.85 * Math.sqrt(0.8 * concrete.fck) * (Math.sqrt(1 + 5 * (0.8 * concrete.fck / (6.89 * pt)) - 1)) / (6 * (0.8 * concrete.fck / (6.89 * pt)));
-  const tauCSimplified = Math.min(0.28 * Math.pow(concrete.fck, 0.333) * Math.pow(pt, 0.333), 0.5 * Math.sqrt(concrete.fck));
+  // ===== COMPLETE SHEAR DESIGN (IS 456 Cl. 40) =====
 
-  // Stirrup spacing
-  const Vus = Math.max(0, Vu * 1000 - tauCSimplified * b * d);
-  const Asv = 2 * Math.PI * Math.pow(8, 2) / 4; // 2-legged 8mm stirrups
-  const svCalc = Vus > 0 ? (0.87 * steel.fy * Asv * d) / Vus : 300;
-  const svMax = Math.min(0.75 * d, 300); // IS 456 Cl. 26.5.1.5
-  const sv = Math.min(Math.floor(svCalc / 25) * 25, svMax);
+  // Step (a): Nominal shear stress
+  const VuN = Vu * 1000; // Convert kN to N
+  const tauV = VuN / (b * d);
+  steps.push({
+    label: "Nominal Shear Stress (τv)",
+    formula: "τv = Vu / (b × d)",
+    substitution: `τv = ${r(VuN, 0)} / (${b} × ${d})`,
+    result: `τv = ${r(tauV, 3)} N/mm²`,
+    clause: "IS 456 Cl. 40.1",
+  });
+
+  // Step (b): Percentage of steel & τc from Table 19
+  const pt = r((100 * tension.areaProvided) / (b * d), 3);
+  const tauC = getTauC(pt, input.concreteGrade);
 
   steps.push({
-    label: "Shear Check",
-    formula: "τv = Vu / (b × d), check against τc",
-    substitution: `τv = ${r(Vu * 1000)}/(${b}×${d}) = ${r(tauV, 3)} N/mm²`,
-    result: `τc = ${r(tauCSimplified, 3)} N/mm². Stirrups: 8mm Ø 2L @ ${sv}mm c/c`,
-    clause: "IS 456 Cl. 40.1, Table 19",
+    label: "Percentage of Steel & τc from IS 456 Table 19",
+    formula: "Pt = 100 × Ast / (b × d), then lookup τc from Table 19",
+    substitution: `Pt = 100 × ${tension.areaProvided} / (${b} × ${d}) = ${pt}%`,
+    result: `τc = ${tauC} N/mm² (for Pt = ${pt}%, ${input.concreteGrade})`,
+    clause: "IS 456 Table 19",
+  });
+
+  // Step (c): Compare τv with τc
+  steps.push({
+    label: "Shear Check: τv vs τc",
+    formula: "If τv > τc → shear reinforcement required",
+    substitution: `τv = ${r(tauV, 3)} N/mm², τc = ${tauC} N/mm²`,
+    result: tauV > tauC ? `τv > τc → Shear reinforcement REQUIRED` : `τv ≤ τc → Minimum shear reinforcement sufficient`,
+  });
+
+  // Step (d): Shear resisted by concrete
+  const Vc = tauC * b * d; // in N
+  steps.push({
+    label: "Shear Resisted by Concrete (Vc)",
+    formula: "Vc = τc × b × d",
+    substitution: `Vc = ${tauC} × ${b} × ${d}`,
+    result: `Vc = ${r(Vc, 0)} N = ${r(Vc / 1000)} kN`,
+    clause: "IS 456 Cl. 40.2",
+  });
+
+  // Step (e): Shear to be resisted by stirrups
+  const Vs = Math.max(0, VuN - Vc);
+  steps.push({
+    label: "Shear to be Resisted by Stirrups (Vs)",
+    formula: "Vs = Vu − Vc",
+    substitution: `Vs = ${r(VuN, 0)} − ${r(Vc, 0)}`,
+    result: `Vs = ${r(Vs, 0)} N = ${r(Vs / 1000)} kN`,
+  });
+
+  // Step (f): Stirrup spacing
+  const Asv = 2 * Math.PI * Math.pow(8, 2) / 4; // 2-legged 8mm stirrups
+  let svCalc: number;
+  if (Vs > 0) {
+    svCalc = (0.87 * steel.fy * Asv * d) / Vs;
+  } else {
+    // Minimum stirrups
+    svCalc = (0.87 * steel.fy * Asv) / (0.4 * b);
+  }
+  const svMax = Math.min(0.75 * d, 300); // IS 456 Cl. 26.5.1.5
+  const sv = Math.min(Math.floor(svCalc / 5) * 5, svMax); // round to 5mm
+
+  steps.push({
+    label: "Stirrup Spacing Calculation",
+    formula: Vs > 0 ? "Sv = (0.87 × fy × Asv × d) / Vs" : "Sv (min) = (0.87 × fy × Asv) / (0.4 × b)",
+    substitution: Vs > 0
+      ? `Asv (2L-8mm) = ${r(Asv)} mm²\nSv = (0.87 × ${steel.fy} × ${r(Asv)} × ${d}) / ${r(Vs, 0)}`
+      : `Asv (2L-8mm) = ${r(Asv)} mm²\nSv = (0.87 × ${steel.fy} × ${r(Asv)}) / (0.4 × ${b})`,
+    result: `Sv (calc) = ${r(svCalc)} mm\nSv,max = min(0.75d, 300) = ${r(svMax)} mm\n✓ Provide 8mm Ø 2-legged stirrups @ ${sv} mm c/c`,
+    clause: "IS 456 Cl. 40.4, Cl. 26.5.1.5",
   });
 
   // Deflection check (IS 456 Cl. 23.2)
   const spanDepthRatio = L / d;
-  let allowableRatio = beamType === "cantilever" ? 7 : beamType === "continuous" ? 26 : 20;
-  // Modification factor for tension reinforcement
+  let basicRatio = beamType === "cantilever" ? 7 : beamType === "continuous" ? 26 : 20;
+  // Modification factor for tension reinforcement (IS 456 Fig. 4)
   const fs = 0.58 * steel.fy * AstProvided / tension.areaProvided;
-  const mf = Math.min(2.0, 1.6 - 0.002 * fs);
-  allowableRatio *= mf;
-
+  const mf = Math.max(0.8, Math.min(2.0, 1.6 - 0.002 * fs));
+  const allowableRatio = basicRatio * mf;
   const deflectionOk = spanDepthRatio <= allowableRatio;
 
   steps.push({
-    label: "Deflection Check (Span/Depth)",
-    formula: "L/d ≤ Basic ratio × Modification factor",
-    substitution: `L/d = ${r(spanDepthRatio)}, Allowable = ${r(allowableRatio)}`,
-    result: deflectionOk ? "SAFE – Deflection within limits" : "UNSAFE – Increase depth",
-    clause: "IS 456 Cl. 23.2.1",
+    label: "Deflection Check (Span/Depth Ratio)",
+    formula: "L/d ≤ Basic ratio × Modification factor (MF)",
+    substitution: `fs = 0.58 × ${steel.fy} × ${r(AstProvided)} / ${tension.areaProvided} = ${r(fs)} N/mm²\nMF = ${r(mf)}\nL/d = ${L} / ${d} = ${r(spanDepthRatio)}\nAllowable = ${basicRatio} × ${r(mf)} = ${r(allowableRatio)}`,
+    result: deflectionOk ? `${r(spanDepthRatio)} ≤ ${r(allowableRatio)} → SAFE ✓` : `${r(spanDepthRatio)} > ${r(allowableRatio)} → UNSAFE – Increase depth`,
+    clause: "IS 456 Cl. 23.2.1, Fig. 4",
   });
 
-  // Simplified deflection calculation
+  // Simplified deflection in mm
   const I = (b * Math.pow(D, 3)) / 12;
   const deflection = beamType === "cantilever"
     ? (wu * Math.pow(L, 4)) / (8 * concrete.Ec * I) / 1000
@@ -438,8 +538,8 @@ export function calculateBeamDesign(input: BeamInput): BeamDesignResult {
 
   return {
     reinforcement: {
-      tensionBars: `${tension.count}-${tension.diameter}mm Ø`,
-      compressionBars: `${compression.count}-${compression.diameter}mm Ø`,
+      tensionBars: `${tension.count}–${tension.diameter}mm Ø`,
+      compressionBars: `${compression.count}–${compression.diameter}mm Ø`,
       stirrups: `8mm Ø 2L @ ${sv}mm c/c`,
       tensionArea: tension.areaProvided,
       compressionArea: compression.areaProvided,
@@ -450,7 +550,7 @@ export function calculateBeamDesign(input: BeamInput): BeamDesignResult {
     },
     shear: {
       ultimate: r(Vu, 1),
-      resistance: r(tauCSimplified * b * d / 1000, 1),
+      resistance: r(Vc / 1000, 1),
     },
     deflection: {
       calculated: r(deflection),
