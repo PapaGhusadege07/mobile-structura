@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 export function SchedulingView() {
-  const [rawTasks, setRawTasks] = useState<ScheduleTask[]>([]);
+  const [rawTasks, setRawTasks] = useState<ScheduleTask[]>(getSampleProject());
   const [editingTask, setEditingTask] = useState<ScheduleTask | null>(null);
   const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();

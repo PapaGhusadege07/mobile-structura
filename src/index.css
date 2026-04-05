@@ -186,8 +186,14 @@
   }
 
   @keyframes scan {
-    0%, 100% { transform: translateY(0); opacity: 1; }
-    50% { transform: translateY(100%); opacity: 0.5; }
+    0%, 100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(100%);
+      opacity: 0.5;
+    }
   }
 
   .animate-wave {
@@ -195,14 +201,11 @@
   }
 
   @keyframes wave {
-    0%, 100% { transform: scaleY(1); }
-    50% { transform: scaleY(1.5); }
-  }
-
-  .engineering-grid {
-    background-size: 20px 20px;
-    background-image:
-      linear-gradient(to right, hsl(var(--border) / 0.3) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border) / 0.3) 1px, transparent 1px);
+    0%, 100% {
+      transform: scaleY(1);
+    }
+    50% {
+      transform: scaleY(1.5);
+    }
   }
 }

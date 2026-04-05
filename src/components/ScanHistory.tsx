@@ -11,7 +11,29 @@ interface ScanRecord {
   score: number;
 }
 
-const mockScans: ScanRecord[] = [];
+const mockScans: ScanRecord[] = [
+  {
+    id: "1",
+    structureName: "Downtown Office Tower",
+    date: "2 hours ago",
+    status: "healthy",
+    score: 94,
+  },
+  {
+    id: "2",
+    structureName: "Riverside Bridge",
+    date: "Yesterday",
+    status: "warning",
+    score: 72,
+  },
+  {
+    id: "3",
+    structureName: "Central Station",
+    date: "3 days ago",
+    status: "healthy",
+    score: 88,
+  },
+];
 
 interface ScanHistoryProps {
   onSelectScan?: (scan: ScanRecord) => void;

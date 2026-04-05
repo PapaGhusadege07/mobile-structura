@@ -7,6 +7,7 @@ import { SettingsView } from "@/components/views/SettingsView";
 import { DesignView } from "@/components/views/DesignView";
 import { DrainageView } from "@/components/views/DrainageView";
 import { MarketPriceView } from "@/components/views/MarketPriceView";
+import { AnalyticsView } from "@/components/views/AnalyticsView";
 import { CalculatorsView } from "@/components/views/CalculatorsView";
 import { CostEstimatorView } from "@/components/views/CostEstimatorView";
 import { SupplierView } from "@/components/views/SupplierView";
@@ -27,6 +28,7 @@ const Index = () => {
       case "drainage": return <DrainageView />;
       case "settings": return <SettingsView />;
       case "market": return <MarketPriceView />;
+      case "analytics": return <AnalyticsView />;
       case "calculators": return <CalculatorsView />;
       case "estimator": return <CostEstimatorView />;
       case "suppliers": return <SupplierView />;

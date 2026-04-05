@@ -1,26 +1,28 @@
 import { useState } from "react";
-import { Home, Scan, BarChart3, Settings, Ruler, Droplets, TrendingUp, Calculator, IndianRupee, Store, Menu, X, CalendarDays } from "lucide-react";
+import { Home, Scan, BarChart3, Settings, Ruler, Droplets, TrendingUp, LineChart, Calculator, IndianRupee, Store, Menu, X, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   id: string;
+  group?: "main" | "market";
 }
 
 const navItems: NavItem[] = [
-  { icon: Home, label: "Home", id: "home" },
-  { icon: TrendingUp, label: "Prices", id: "market" },
-  { icon: Calculator, label: "Calc", id: "calculators" },
-  { icon: IndianRupee, label: "Estimate", id: "estimator" },
-  { icon: Store, label: "Suppliers", id: "suppliers" },
+  { icon: Home, label: "Home", id: "home", group: "main" },
+  { icon: TrendingUp, label: "Prices", id: "market", group: "market" },
+  { icon: LineChart, label: "Analytics", id: "analytics", group: "market" },
+  { icon: Calculator, label: "Calc", id: "calculators", group: "market" },
+  { icon: IndianRupee, label: "Estimate", id: "estimator", group: "market" },
+  { icon: Store, label: "Suppliers", id: "suppliers", group: "market" },
 ];
 
 const moreItems: NavItem[] = [
   { icon: CalendarDays, label: "Schedule", id: "schedule" },
   { icon: Scan, label: "Scan", id: "scan" },
   { icon: BarChart3, label: "Reports", id: "reports" },
-  { icon: Ruler, label: "IS Design", id: "design" },
+  { icon: Ruler, label: "Structure", id: "design" },
   { icon: Droplets, label: "Drainage", id: "drainage" },
   { icon: Settings, label: "Settings", id: "settings" },
 ];
@@ -35,6 +37,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
 
   return (
     <>
+      {/* More Menu Overlay */}
       {showMore && (
         <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm" onClick={() => setShowMore(false)}>
           <div className="absolute bottom-16 left-2 right-2 p-3 rounded-xl glass border border-border/50 shadow-xl" onClick={e => e.stopPropagation()}>
