@@ -1,30 +1,37 @@
 import { useState } from "react";
 import { DesignInputForm } from "@/components/design/DesignInputForm";
-import { BeamResults, ColumnResults, FootingResults } from "@/components/design/DesignResults";
+import { BeamResults, ColumnResults, FootingResults, SlabResults } from "@/components/design/DesignResults";
 import { Structural3DViewer } from "@/components/design/Structural3DViewer";
 import { ComplianceChecker } from "@/components/design/ComplianceChecker";
 import { ExportTools } from "@/components/design/ExportTools";
+import { Drawing2D } from "@/components/design/Drawing2D";
+import { BarSchedule } from "@/components/design/BarSchedule";
+import { SteelCostPanel } from "@/components/design/SteelCostPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   calculateBeamDesign,
   calculateColumnDesign,
   calculateFootingDesign,
+  calculateSlabDesign,
   estimateBeamCost,
   estimateColumnCost,
   estimateFootingCost,
+  estimateSlabCost,
   type BeamInput,
   type ColumnInput,
   type FootingInput,
+  type SlabInput,
   type BeamDesignResult,
   type ColumnDesignResult,
   type FootingDesignResult,
+  type SlabDesignResult,
   type CostEstimate,
 } from "@/lib/structural-calculations";
-import { Ruler, Shield, Box } from "lucide-react";
+import { Ruler, Shield, Box, PenTool, LayoutList, IndianRupee } from "lucide-react";
 
-type DesignType = "beam" | "column" | "footing" | null;
-type DesignResult = BeamDesignResult | ColumnDesignResult | FootingDesignResult;
-type DesignInput = BeamInput | ColumnInput | FootingInput;
+type DesignType = "beam" | "column" | "footing" | "slab" | null;
+type DesignResult = BeamDesignResult | ColumnDesignResult | FootingDesignResult | SlabDesignResult;
+type DesignInput = BeamInput | ColumnInput | FootingInput | SlabInput;
 
 export function DesignView() {
   const [activeTab, setActiveTab] = useState("design");
@@ -33,12 +40,7 @@ export function DesignView() {
     input: DesignInput | null;
     result: DesignResult | null;
     cost: CostEstimate | null;
-  }>({
-    type: null,
-    input: null,
-    result: null,
-    cost: null,
-  });
+  }>({ type: null, input: null, result: null, cost: null });
 
   const handleBeamSubmit = (data: BeamInput) => {
     const result = calculateBeamDesign(data);
@@ -58,97 +60,106 @@ export function DesignView() {
     setCurrentDesign({ type: "footing", input: data, result, cost });
   };
 
+  const handleSlabSubmit = (data: SlabInput) => {
+    const result = calculateSlabDesign(data);
+    const cost = estimateSlabCost(data, result);
+    setCurrentDesign({ type: "slab", input: data, result, cost });
+  };
+
+  const hasResult = currentDesign.result !== null;
+
   return (
     <div className="min-h-screen pb-24 px-4 pt-6">
-      {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Design Tools</h1>
+        <h1 className="text-2xl font-bold">IS Code Design</h1>
         <p className="text-muted-foreground text-sm">
-          Parametric structural design with auto-calculations
+          IS 456:2000 compliant structural design with step-by-step calculations
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="design" className="flex items-center gap-2">
-            <Ruler className="w-4 h-4" />
-            Design
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6">
+          <TabsTrigger value="design" className="flex items-center gap-1 text-xs">
+            <Ruler className="w-3.5 h-3.5" />Design
           </TabsTrigger>
-          <TabsTrigger value="3d" className="flex items-center gap-2" disabled={!currentDesign.result}>
-            <Box className="w-4 h-4" />
-            3D View
+          <TabsTrigger value="2d" className="flex items-center gap-1 text-xs" disabled={!hasResult}>
+            <PenTool className="w-3.5 h-3.5" />2D
           </TabsTrigger>
-          <TabsTrigger value="compliance" className="flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            Compliance
+          <TabsTrigger value="3d" className="flex items-center gap-1 text-xs" disabled={!hasResult}>
+            <Box className="w-3.5 h-3.5" />3D
+          </TabsTrigger>
+          <TabsTrigger value="bbs" className="flex items-center gap-1 text-xs" disabled={!hasResult}>
+            <LayoutList className="w-3.5 h-3.5" />BBS
+          </TabsTrigger>
+          <TabsTrigger value="cost" className="flex items-center gap-1 text-xs" disabled={!hasResult}>
+            <IndianRupee className="w-3.5 h-3.5" />Cost
+          </TabsTrigger>
+          <TabsTrigger value="compliance" className="flex items-center gap-1 text-xs">
+            <Shield className="w-3.5 h-3.5" />Code
           </TabsTrigger>
         </TabsList>
 
-        {/* Design Tab */}
         <TabsContent value="design" className="space-y-4 mt-0">
           <DesignInputForm
             onBeamSubmit={handleBeamSubmit}
             onColumnSubmit={handleColumnSubmit}
             onFootingSubmit={handleFootingSubmit}
+            onSlabSubmit={handleSlabSubmit}
           />
 
-          {/* Results */}
           {currentDesign.type === "beam" && currentDesign.result && currentDesign.cost && (
             <>
               <BeamResults result={currentDesign.result as BeamDesignResult} cost={currentDesign.cost} />
-              <ExportTools
-                type="beam"
-                input={currentDesign.input!}
-                result={currentDesign.result}
-                cost={currentDesign.cost}
-              />
+              <ExportTools type="beam" input={currentDesign.input!} result={currentDesign.result} cost={currentDesign.cost} />
             </>
           )}
 
           {currentDesign.type === "column" && currentDesign.result && currentDesign.cost && (
             <>
               <ColumnResults result={currentDesign.result as ColumnDesignResult} cost={currentDesign.cost} />
-              <ExportTools
-                type="column"
-                input={currentDesign.input!}
-                result={currentDesign.result}
-                cost={currentDesign.cost}
-              />
+              <ExportTools type="column" input={currentDesign.input!} result={currentDesign.result} cost={currentDesign.cost} />
             </>
           )}
 
           {currentDesign.type === "footing" && currentDesign.result && currentDesign.cost && (
             <>
               <FootingResults result={currentDesign.result as FootingDesignResult} cost={currentDesign.cost} />
-              <ExportTools
-                type="footing"
-                input={currentDesign.input!}
-                result={currentDesign.result}
-                cost={currentDesign.cost}
-              />
+              <ExportTools type="footing" input={currentDesign.input!} result={currentDesign.result} cost={currentDesign.cost} />
+            </>
+          )}
+
+          {currentDesign.type === "slab" && currentDesign.result && currentDesign.cost && (
+            <>
+              <SlabResults result={currentDesign.result as SlabDesignResult} cost={currentDesign.cost} />
+              <ExportTools type="slab" input={currentDesign.input!} result={currentDesign.result} cost={currentDesign.cost} />
             </>
           )}
         </TabsContent>
 
-        {/* 3D View Tab */}
-        <TabsContent value="3d" className="mt-0">
+        <TabsContent value="2d" className="mt-0">
           {currentDesign.type && currentDesign.input && currentDesign.result && (
-            <div className="space-y-4">
-              <div className="rounded-xl overflow-hidden border border-border">
-                <Structural3DViewer
-                  type={currentDesign.type}
-                  input={currentDesign.input}
-                  result={currentDesign.result}
-                />
-              </div>
-              <div className="text-center text-sm text-muted-foreground">
-                Drag to rotate • Scroll to zoom • Shift+drag to pan
-              </div>
-            </div>
+            <Drawing2D type={currentDesign.type} input={currentDesign.input} result={currentDesign.result} />
           )}
         </TabsContent>
 
-        {/* Compliance Tab */}
+        <TabsContent value="3d" className="mt-0">
+          {currentDesign.type && currentDesign.input && currentDesign.result && (
+            <Structural3DViewer type={currentDesign.type} input={currentDesign.input} result={currentDesign.result} />
+          )}
+        </TabsContent>
+
+        <TabsContent value="bbs" className="mt-0">
+          {currentDesign.type && currentDesign.input && currentDesign.result && (
+            <BarSchedule type={currentDesign.type} input={currentDesign.input} result={currentDesign.result} />
+          )}
+        </TabsContent>
+
+        <TabsContent value="cost" className="mt-0">
+          {currentDesign.type && currentDesign.input && currentDesign.result && currentDesign.cost && (
+            <SteelCostPanel type={currentDesign.type} input={currentDesign.input} result={currentDesign.result} cost={currentDesign.cost} />
+          )}
+        </TabsContent>
+
         <TabsContent value="compliance" className="mt-0">
           <ComplianceChecker />
         </TabsContent>

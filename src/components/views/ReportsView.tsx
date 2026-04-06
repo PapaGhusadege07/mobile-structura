@@ -12,35 +12,21 @@ import {
 import { cn } from "@/lib/utils";
 
 const analyticsData = {
-  totalScans: 47,
-  averageScore: 84,
-  structuresMonitored: 12,
-  alerts: 2,
+  totalScans: 0,
+  averageScore: 0,
+  structuresMonitored: 0,
+  alerts: 0,
 };
 
-const trendData = [
-  { month: "Oct", value: 78 },
-  { month: "Nov", value: 82 },
-  { month: "Dec", value: 79 },
-  { month: "Jan", value: 84 },
-];
+const trendData: { month: string; value: number }[] = [];
 
-const alertsList = [
-  {
-    id: "1",
-    structure: "Riverside Bridge",
-    issue: "Elevated vibration detected",
-    severity: "warning" as const,
-    date: "2 days ago",
-  },
-  {
-    id: "2",
-    structure: "Parking Garage B",
-    issue: "Minor tilt deviation",
-    severity: "warning" as const,
-    date: "1 week ago",
-  },
-];
+const alertsList: {
+  id: string;
+  structure: string;
+  issue: string;
+  severity: "warning" | "critical";
+  date: string;
+}[] = [];
 
 export function ReportsView() {
   return (
