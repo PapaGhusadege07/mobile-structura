@@ -64,8 +64,8 @@ export function HomeView({ onStartScan }: HomeViewProps) {
       {/* Feature Cards */}
       <div className="px-6 mt-6 grid grid-cols-2 gap-3">
         {[
-          { icon: Activity, label: "Vibration", value: "—", color: "text-success" },
-          { icon: Building2, label: "Structures", value: "0", color: "text-accent" },
+          { icon: Activity, label: "Vibration", value: "2.1 mm/s", color: "text-success" },
+          { icon: Building2, label: "Structures", value: "12", color: "text-accent" },
         ].map((item, index) => (
           <Card
             key={item.label}
