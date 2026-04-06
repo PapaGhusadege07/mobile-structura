@@ -12,13 +12,18 @@ import {
 import { cn } from "@/lib/utils";
 
 const analyticsData = {
-  totalScans: 0,
-  averageScore: 0,
-  structuresMonitored: 0,
-  alerts: 0,
+  totalScans: 47,
+  averageScore: 82,
+  structuresMonitored: 12,
+  alerts: 3,
 };
 
-const trendData: { month: string; value: number }[] = [];
+const trendData = [
+  { month: "Jan", value: 74 },
+  { month: "Feb", value: 78 },
+  { month: "Mar", value: 76 },
+  { month: "Apr", value: 82 },
+];
 
 const alertsList: {
   id: string;
@@ -26,7 +31,11 @@ const alertsList: {
   issue: string;
   severity: "warning" | "critical";
   date: string;
-}[] = [];
+}[] = [
+  { id: "1", structure: "RCC Beam B-14", issue: "Deflection exceeds L/250 limit", severity: "warning", date: "2026-04-04" },
+  { id: "2", structure: "Column C-7", issue: "Reinforcement corrosion detected", severity: "critical", date: "2026-04-02" },
+  { id: "3", structure: "Footing F-3", issue: "Settlement > 25mm observed", severity: "warning", date: "2026-03-28" },
+];
 
 export function ReportsView() {
   return (
