@@ -55,7 +55,7 @@ export function HomeView({ onStartScan }: HomeViewProps) {
                 <div className="text-sm text-muted-foreground mb-1">Overall Status</div>
                 <StatusBadge status="healthy" label="12 structures OK" />
               </div>
-              <HealthScore score={0} size="sm" />
+              <HealthScore score={82} size="sm" />
             </div>
           </CardContent>
         </Card>
